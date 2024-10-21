@@ -4,22 +4,34 @@ import React, { useState } from "react";
 // react icons
 import { IoIosSearch } from "react-icons/io";
 import { CiMenuFries } from "react-icons/ci";
+import useRouting from "@/Hooks/useRouting";
+import { signOut, useSession } from "next-auth/react";
+import toast from "react-hot-toast";
 
 const NavBar = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const goRoute = useRouting();
+  const { status } = useSession();
 
   return (
     <nav className="flex items-center justify-between w-full relative bg-white boxShadow rounded-full px-[10px] py-[8px]">
-      <img
-        src="https://i.ibb.co/0BZfPq6/darklogo.png"
-        alt="logo"
-        className="w-[55px] "
-      />
+      <p
+        onClick={() => goRoute("/")}
+        className="before:w-0 hover:before:w-full before:bg-main before:h-[2px] before:transition-all before:duration-300 before:absolute relative before:rounded-full before:bottom-[-2px]  transition-all duration-300 before:left-0 cursor-pointer capitalize"
+      >
+        <span className="text-main font-bold text-lg">Task</span> Manager
+      </p>
       <ul className="items-center gap-[20px] text-[1rem] text-[#424242] lg:flex hidden">
-        <li className="before:w-0 hover:before:w-full before:bg-main before:h-[2px] before:transition-all before:duration-300 before:absolute relative before:rounded-full before:bottom-[-2px] hover:text-main transition-all duration-300 before:left-0 cursor-pointer capitalize">
+        <li
+          onClick={() => goRoute("/")}
+          className="before:w-0 hover:before:w-full before:bg-main before:h-[2px] before:transition-all before:duration-300 before:absolute relative before:rounded-full before:bottom-[-2px] hover:text-main transition-all duration-300 before:left-0 cursor-pointer capitalize"
+        >
           home
         </li>
-        <li className="before:w-0 hover:before:w-full before:bg-main before:h-[2px] before:transition-all before:duration-300 before:absolute relative before:rounded-full before:bottom-[-2px] hover:text-main transition-all duration-300 before:left-0 cursor-pointer capitalize">
+        <li
+          onClick={() => goRoute("/features")}
+          className="before:w-0 hover:before:w-full before:bg-main before:h-[2px] before:transition-all before:duration-300 before:absolute relative before:rounded-full before:bottom-[-2px] hover:text-main transition-all duration-300 before:left-0 cursor-pointer capitalize"
+        >
           features
         </li>
         <li className="before:w-0 hover:before:w-full before:bg-main before:h-[2px] before:transition-all before:duration-300 before:absolute relative before:rounded-full before:bottom-[-2px] hover:text-main transition-all duration-300 before:left-0 cursor-pointer capitalize">
@@ -31,12 +43,26 @@ const NavBar = () => {
       </ul>
 
       <div className="items-center gap-[10px] flex">
-        <button className="py-[7px] text-[1rem] px-[16px] rounded-full capitalize hover:text-main transition-all duration-300 sm:flex hidden">
-          Sign in
-        </button>
-        <button className="py-[7px] text-[1rem] px-[16px] rounded-full capitalize bg-main text-white hover:bg-rose-600 transition-all duration-300 sm:flex hidden">
-          Sign up
-        </button>
+        {status !== "loading" && status === "authenticated" ? (
+          <button
+            onClick={() => {
+              signOut({
+                callbackUrl: "/login", // Redirect after logout (optional)
+              });
+              toast.success("Sign Out Successful");
+            }}
+            className="py-[7px] text-[1rem] px-[16px] rounded-full capitalize bg-main text-white hover:bg-rose-600 transition-all duration-300 sm:flex hidden"
+          >
+            Log out
+          </button>
+        ) : (
+          <button
+            onClick={() => goRoute("/login")}
+            className="py-[7px] text-[1rem] px-[16px] rounded-full capitalize bg-main text-white hover:bg-rose-600 transition-all duration-300 sm:flex hidden"
+          >
+            Sign in
+          </button>
+        )}
 
         <CiMenuFries
           className="text-[1.8rem] mr-1 text-[#424242]c cursor-pointer lg:hidden flex"

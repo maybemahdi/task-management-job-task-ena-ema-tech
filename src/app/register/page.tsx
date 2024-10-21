@@ -21,8 +21,7 @@ const Page: React.FC = () => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title =
-      status === "authenticated" ? "Redirecting..." : "SocialNest | Register";
+    document.title = "Task Manager | Register";
   }, [status]);
 
   useEffect(() => {

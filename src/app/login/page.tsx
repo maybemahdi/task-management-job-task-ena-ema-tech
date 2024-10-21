@@ -13,8 +13,7 @@ const Page: React.FC = () => {
   const { status } = useSession();
 
   useEffect(() => {
-    document.title =
-      status === "authenticated" ? "Redirecting..." : "Task Manager | Login";
+    document.title = "Task Manager | Login";
   }, [status]);
 
   useEffect(() => {
@@ -35,10 +34,13 @@ const Page: React.FC = () => {
     const email = (form.elements.namedItem("email") as HTMLInputElement)?.value;
     const password = (form.elements.namedItem("password") as HTMLInputElement)
       .value;
+    const callbackUrl =
+      new URL(window.location.href).searchParams.get("callbackUrl") || "/";
     const res = await signIn("credentials", {
       email,
       password,
-      redirect: false,
+      redirect: true,
+      callbackUrl,
     });
     console.log(res);
     if (res?.status === 401) {
@@ -49,7 +51,6 @@ const Page: React.FC = () => {
     if (res?.status === 200) {
       toast.success("Login Successful");
       form.reset();
-      router.push("/");
       setIsLoading(false);
     }
   };
