@@ -39,14 +39,14 @@ const Page: React.FC = () => {
     const res = await signIn("credentials", {
       email,
       password,
-      redirect: true,
+      redirect: false,
       callbackUrl,
     });
     console.log(res);
     if (res?.status === 401) {
+      toast.error("Wrong Credentials");
       setIsLoading(false);
       form.reset();
-      return toast.error("Wrong Credentials");
     }
     if (res?.status === 200) {
       toast.success("Login Successful");

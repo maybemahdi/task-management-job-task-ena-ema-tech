@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 
 // react icons
-import { IoIosSearch } from "react-icons/io";
 import { CiMenuFries } from "react-icons/ci";
 import useRouting from "@/Hooks/useRouting";
 import { signOut, useSession } from "next-auth/react";
@@ -14,51 +13,29 @@ const NavBar = () => {
   const { status } = useSession();
 
   return (
-    <nav className="flex items-center justify-between w-full relative bg-white boxShadow rounded-full px-[10px] py-[8px]">
+    <nav className="flex items-center justify-between w-full relative bg-white boxShadow rounded-full px-[10px] py-[16px]">
       <p
         onClick={() => goRoute("/")}
         className="before:w-0 hover:before:w-full before:bg-main before:h-[2px] before:transition-all before:duration-300 before:absolute relative before:rounded-full before:bottom-[-2px]  transition-all duration-300 before:left-0 cursor-pointer capitalize"
       >
         <span className="text-main font-bold text-lg">Task</span> Manager
       </p>
-      <ul className="items-center gap-[20px] text-[1rem] text-[#424242] lg:flex hidden">
-        <li
-          onClick={() => goRoute("/")}
-          className="before:w-0 hover:before:w-full before:bg-main before:h-[2px] before:transition-all before:duration-300 before:absolute relative before:rounded-full before:bottom-[-2px] hover:text-main transition-all duration-300 before:left-0 cursor-pointer capitalize"
-        >
-          home
-        </li>
-        <li
-          onClick={() => goRoute("/features")}
-          className="before:w-0 hover:before:w-full before:bg-main before:h-[2px] before:transition-all before:duration-300 before:absolute relative before:rounded-full before:bottom-[-2px] hover:text-main transition-all duration-300 before:left-0 cursor-pointer capitalize"
-        >
-          features
-        </li>
-        <li className="before:w-0 hover:before:w-full before:bg-main before:h-[2px] before:transition-all before:duration-300 before:absolute relative before:rounded-full before:bottom-[-2px] hover:text-main transition-all duration-300 before:left-0 cursor-pointer capitalize">
-          blogs
-        </li>
-        <li className="before:w-0 hover:before:w-full before:bg-main before:h-[2px] before:transition-all before:duration-300 before:absolute relative before:rounded-full before:bottom-[-2px] hover:text-main transition-all duration-300 before:left-0 cursor-pointer capitalize">
-          shop
-        </li>
-      </ul>
 
       <div className="items-center gap-[10px] flex">
         {status !== "loading" && status === "authenticated" ? (
           <button
             onClick={() => {
-              signOut({
-                callbackUrl: "/login", // Redirect after logout (optional)
-              });
+              signOut();
               toast.success("Sign Out Successful");
             }}
-            className="py-[7px] text-[1rem] px-[16px] rounded-full capitalize bg-main text-white hover:bg-rose-600 transition-all duration-300 sm:flex hidden"
+            className="py-[7px] text-[1rem] px-[16px] rounded-full capitalize bg-main text-white hover:bg-blue-600 transition-all duration-300 sm:flex hidden"
           >
             Log out
           </button>
         ) : (
           <button
             onClick={() => goRoute("/login")}
-            className="py-[7px] text-[1rem] px-[16px] rounded-full capitalize bg-main text-white hover:bg-rose-600 transition-all duration-300 sm:flex hidden"
+            className="py-[7px] text-[1rem] px-[16px] rounded-full capitalize bg-main text-white hover:bg-blue-600 transition-all duration-300 sm:flex hidden"
           >
             Sign in
           </button>
@@ -77,27 +54,26 @@ const NavBar = () => {
             : "translate-x-[200px] opacity-0 z-[-1]"
         } lg:hidden bg-white boxShadow p-4 text-center absolute top-[65px] right-0 w-full rounded-md transition-all duration-300`}
       >
-        <div className="relative mb-5">
-          <input
-            className="py-1.5 pr-4 w-full pl-10 rounded-full border border-gray-200 outline-none focus:border-main"
-            placeholder="Search..."
-          />
-          <IoIosSearch className="absolute top-[8px] left-3 text-gray-500 text-[1.3rem]" />
+        <div className="items-center gap-[10px] flex flex-col">
+          {status !== "loading" && status === "authenticated" ? (
+            <button
+              onClick={() => {
+                signOut();
+                toast.success("Sign Out Successful");
+              }}
+              className="py-[7px] text-[1rem] px-[16px] rounded-full capitalize bg-main text-white hover:bg-blue-600 transition-all duration-300"
+            >
+              Log out
+            </button>
+          ) : (
+            <button
+              onClick={() => goRoute("/login")}
+              className="py-[7px] text-[1rem] px-[16px] rounded-full capitalize bg-main text-white hover:bg-blue-600 transition-all duration-300"
+            >
+              Sign in
+            </button>
+          )}
         </div>
-        <ul className="items-center gap-[20px] text-[1rem] text-gray-600 flex flex-col">
-          <li className="hover:border-b-main border-b-[2px] border-transparent transition-all duration-500 cursor-pointer capitalize">
-            home
-          </li>
-          <li className="hover:border-b-main border-b-[2px] border-transparent transition-all duration-500 cursor-poin ter capitalize">
-            Features
-          </li>
-          <li className="hover:border-b-main border-b-[2px] border-transparent transition-all duration-500 cursor-pointer capitalize">
-            Blogs
-          </li>
-          <li className="hover:border-b-main border-b-[2px] border-transparent transition-all duration-500 cursor-pointer capitalize">
-            Shop
-          </li>
-        </ul>
       </aside>
     </nav>
   );
