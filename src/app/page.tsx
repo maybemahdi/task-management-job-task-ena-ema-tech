@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable jsx-a11y/alt-text */
 /* eslint-disable @next/next/no-img-element */
 "use client";
@@ -8,15 +9,17 @@ import React, { FormEvent, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FaRegEdit, FaTrash } from "react-icons/fa";
 import { ImSpinner9 } from "react-icons/im";
-import { IoChevronDown } from "react-icons/io5";
+import { IoIosCheckmarkCircle } from "react-icons/io";
 import { TiArrowSortedDown } from "react-icons/ti";
 import { SkewLoader } from "react-spinners";
 
 interface Task {
+  _id: string;
   taskName: string;
   priority: string;
   tags: string[];
   dueDate: Date;
+  status: string;
 }
 
 export default function Home() {
@@ -26,6 +29,7 @@ export default function Home() {
   const [tags, setTags] = useState<string[]>([]); // State for managing tags
   const [inputTag, setInputTag] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   //filtering
   const [statusFilter, setStatusFilter] = useState("");
@@ -64,6 +68,7 @@ export default function Home() {
       dueDate: selectedDate,
       priority,
       tags,
+      status: "Pending",
     };
     try {
       setIsProcessing(true);
@@ -121,23 +126,48 @@ export default function Home() {
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ["tasks", session?.user, submittedSearch],
+    queryKey: [
+      "tasks",
+      session?.user,
+      submittedSearch,
+      statusFilter,
+      priorityFilter,
+    ],
     enabled: !!session?.user,
     queryFn: async () => {
       const { data } = await axios.get(
-        `/api/tasks/${session?.user?.email}?search=${submittedSearch}`
+        `/api/tasks/${session?.user?.email}?search=${submittedSearch}&status=${statusFilter}&priority=${priorityFilter}`
       );
       return data;
     },
   });
 
+  const handleMarkAsCompleted = async (id: string) => {
+    try {
+      setIsUpdating(true);
+      const { data } = await axios.patch(`/api/tasks/status/${id}`);
+      if (data?.updated) {
+        setIsUpdating(false);
+        refetch();
+        toast.success("Marked as Completed");
+      } else {
+        setIsUpdating(false);
+        toast.error("Please reload and try again");
+      }
+    } catch (error: any) {
+      setIsUpdating(false);
+      console.log(error);
+      toast.error(error?.message);
+    }
+  };
+
   return (
-    <div className="my-8 px-[10px] flex gap-8 justify-between flex-col md:flex-row w-full">
-      <div className="w-full flex flex-col items-center justify-center md:basis-1/3 shadow-md bg-white p-6 rounded-md">
+    <div className="my-8 px-[10px] flex gap-5 justify-between flex-col md:flex-row w-full">
+      <div className="w-full flex flex-col items-center justify-center md:basis-[30%] shadow-md bg-white p-6 rounded-md">
         <h3 className="text-main font-bold text-lg">Create a Task</h3>
         <form
           onSubmit={handleSubmit}
-          className="w-full mx-auto rounded px-0 md:px-8 pt-6 mb-4"
+          className="w-full mx-auto rounded pt-6 mb-4"
         >
           <div className="mb-4">
             <label
@@ -297,15 +327,14 @@ export default function Home() {
       </div>
       <div
         className={`w-full flex flex-col items-center
-          ${tasks?.length < 1 && "justify-center"}
           ${isLoading && "justify-center"}
-          md:flex-1 shadow-md bg-white p-4 rounded-md`}
+          md:flex-1 shadow-md bg-white p-4 rounded-md overflow-x-auto`}
       >
-        {isLoading && <SkewLoader color="#3B82F6" />}
-        {!isLoading && tasks && tasks?.length > 0 && (
+        {isLoading || (isUpdating && <SkewLoader color="#3B82F6" />)}
+        {!isLoading && tasks && (
           <div className="mt-10 px-4 w-full">
             <h3 className="text-lg font-bold mb-4">Task List</h3>
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-col gap-3 justify-start md:flex-row md:justify-between md:*:items-center mb-4">
               <div>
                 <form onSubmit={handleSearch} className="w-full relative">
                   <input
@@ -323,7 +352,7 @@ export default function Home() {
                   </button>
                 </form>
               </div>
-              <div className="flex items-center justify-center gap-4">
+              <div className="flex flex-col md:flex-row justify-start md:items-center md:justify-center gap-3">
                 <div className="relative">
                   <select
                     className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -347,7 +376,7 @@ export default function Home() {
                     <option disabled value="">
                       Sort by Priority
                     </option>
-                    <option value="All">All</option>
+                    <option value="all">All</option>
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
@@ -373,12 +402,14 @@ export default function Home() {
                     <th className="py-3 px-6 text-left">Due Date</th>
                     <th className="py-3 px-6 text-left">Priority</th>
                     <th className="py-3 px-6 text-left">Tags</th>
+                    <th className="py-3 px-6 text-left">Status</th>
                     <th className="py-3 px-6 text-left">Edit</th>
                     <th className="py-3 px-6 text-left">Delete</th>
+                    <th className="py-3 px-6 text-left">Mark</th>
                   </tr>
                 </thead>
                 <tbody className="text-gray-600 text-sm font-light">
-                  {tasks.map((task: Task, index: number) => (
+                  {tasks?.map((task: Task, index: number) => (
                     <tr
                       key={index}
                       className="border-b border-gray-200 hover:bg-gray-100"
@@ -421,6 +452,19 @@ export default function Home() {
                         </div>
                       </td>
                       <td className="py-3 px-6 text-left">
+                        <span
+                          className={`py-1 px-3 rounded-full text-xs ${
+                            task.status === "Pending"
+                              ? "bg-yellow-200 text-yellow-700"
+                              : task.status === "Completed"
+                              ? "bg-green-200 text-green-700"
+                              : ""
+                          }`}
+                        >
+                          {task?.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-6 text-left">
                         <FaRegEdit
                           title="edit task"
                           className="text-black cursor-pointer"
@@ -434,17 +478,27 @@ export default function Home() {
                           size={20}
                         />
                       </td>
+                      <td className="py-3 px-6 text-left">
+                        <button
+                          onClick={() => handleMarkAsCompleted(task?._id)}
+                          disabled={task?.status === "Completed"}
+                        >
+                          <IoIosCheckmarkCircle
+                            title="Mark as Completed"
+                            className={`text-green-500 cursor-pointer ${
+                              task?.status === "Completed" &&
+                              "cursor-not-allowed text-gray-300"
+                            }`}
+                            size={20}
+                          />
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           </div>
-        )}
-        {!isLoading && tasks && tasks?.length < 1 && (
-          <h3 className="text-main font-bold text-xl text-center">
-            No task added yet!
-          </h3>
         )}
       </div>
     </div>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { connectDB } from "@/lib/connectDB";
 import { NextResponse } from "next/server";
 
@@ -10,6 +11,8 @@ export const GET = async (
   const tasklistCollection = db.collection("tasklist");
   const url = new URL(request.url);
   const search = url.searchParams.get("search") || "";
+  const statusQuery = url.searchParams.get("status") || "";
+  const priorityQuery = url.searchParams.get("priority") || "";
   let query: { [key: string]: any } = {
     userEmail: email, // Ensure the userEmail filter is included
   };
@@ -20,6 +23,30 @@ export const GET = async (
         { taskName: { $regex: search, $options: "i" } },
         { description: { $regex: search, $options: "i" } },
       ],
+    };
+  }
+  if (statusQuery && statusQuery !== "All") {
+    query = {
+      ...query,
+      status:
+        statusQuery === "Pending"
+          ? "Pending"
+          : statusQuery === "Completed"
+          ? "Completed"
+          : "",
+    };
+  }
+  if (priorityQuery && priorityQuery !== "all") {
+    query = {
+      ...query,
+      priority:
+        priorityQuery === "low"
+          ? "low"
+          : priorityQuery === "high"
+          ? "high"
+          : priorityQuery === "medium"
+          ? "medium"
+          : "",
     };
   }
   const result = await tasklistCollection.find(query).toArray();
