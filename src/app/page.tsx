@@ -1,9 +1,21 @@
+/* eslint-disable jsx-a11y/alt-text */
+/* eslint-disable @next/next/no-img-element */
 "use client";
+import useTasks from "@/Hooks/useTasks";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import React, { FormEvent, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { FaRegEdit, FaTrash } from "react-icons/fa";
 import { TiArrowSortedDown } from "react-icons/ti";
+import { SkewLoader } from "react-spinners";
+
+interface Task {
+  taskName: string;
+  priority: string;
+  tags: string[];
+  dueDate: Date;
+}
 
 export default function Home() {
   const { status, data: session } = useSession();
@@ -11,8 +23,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const [tags, setTags] = useState<string[]>([]); // State for managing tags
   const [inputTag, setInputTag] = useState<string>("");
-
-  console.log(session?.user)
+  const { tasks, isLoading, refetch } = useTasks();
 
   useEffect(() => {
     document.title = "Task Manager | Home";
@@ -33,10 +44,15 @@ export default function Home() {
     const form = e.target as HTMLFormElement;
     const taskName = form?.taskName?.value;
     const description = form?.description?.value;
-    const duoDate = selectedDate;
     const priority = form?.priority?.value;
 
-    const task = { taskName, description, duoDate, priority };
+    const task = {
+      taskName,
+      description,
+      dueDate: selectedDate,
+      priority,
+      tags,
+    };
     try {
       const { data } = await axios.post("/api/tasks", {
         ...task,
@@ -44,6 +60,7 @@ export default function Home() {
         userEmail: session?.user?.email,
       });
       if (data?.added) {
+        refetch();
         setError("");
         setTags([]);
         form.reset();
@@ -53,6 +70,7 @@ export default function Home() {
       console.log(error);
     }
   };
+
   // Add tag from input
   const addTag = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -234,8 +252,89 @@ export default function Home() {
           </div>
         </form>
       </div>
-      <div className="w-full flex flex-col items-center justify-center md:basis-1/2 shadow-md bg-white p-6 rounded-md">
-      
+      <div
+        className={`w-full flex flex-col items-center
+          ${tasks?.length < 1 && "justify-center"}
+          ${isLoading && "justify-center"}
+          md:basis-1/2 shadow-md bg-white p-4 rounded-md`}
+      >
+        {isLoading && <SkewLoader color="#3B82F6" />}
+        {!isLoading && tasks && tasks?.length > 0 && (
+          <div className="mt-10 px-4 w-full">
+            <h3 className="text-lg font-bold mb-4">Task List</h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white shadow-md rounded-lg">
+                <thead>
+                  <tr className="bg-gray-200 text-gray-600 text-sm leading-normal">
+                    <th className="py-3 px-6 text-left">Task Name</th>
+                    <th className="py-3 px-6 text-left">Due Date</th>
+                    <th className="py-3 px-6 text-left">Priority</th>
+                    <th className="py-3 px-6 text-left">Tags</th>
+                    <th className="py-3 px-6 text-left">Edit</th>
+                    <th className="py-3 px-6 text-left">Delete</th>
+                  </tr>
+                </thead>
+                <tbody className="text-gray-600 text-sm font-light">
+                  {tasks.map((task: Task, index: number) => (
+                    <tr
+                      key={index}
+                      className="border-b border-gray-200 hover:bg-gray-100"
+                    >
+                      <td className="py-3 px-6 text-left whitespace-nowrap">
+                        <span className="font-medium">{task.taskName}</span>
+                      </td>
+                      <td className="py-3 px-6 text-left">
+                        {task.dueDate
+                          ? new Date(task.dueDate).toLocaleDateString("en-GB", {
+                              year: "numeric",
+                              month: "2-digit",
+                              day: "2-digit",
+                            })
+                          : "No due date"}
+                      </td>
+                      <td className="py-3 px-6 text-left">
+                        <span
+                          className={`py-1 px-3 rounded-full text-xs ${
+                            task.priority === "High"
+                              ? "bg-red-200 text-red-700"
+                              : task.priority === "Medium"
+                              ? "bg-yellow-200 text-yellow-700"
+                              : "bg-green-200 text-green-700"
+                          }`}
+                        >
+                          {task.priority}
+                        </span>
+                      </td>
+                      <td className="py-3 px-6 text-left">
+                        <div className="flex gap-2">
+                          {task?.tags?.map((tag, idx) => (
+                            <span
+                              key={idx}
+                              className="bg-blue-500 text-white text-xs font-medium py-1 px-2 rounded-full"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="py-3 px-6 text-left">
+                        <FaRegEdit className="text-black cursor-pointer" size={20} />
+                      </td>
+                      <td className="py-3 px-6 text-left">
+                        <FaTrash className="text-rose-500 cursor-pointer" size={20} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+        {!isLoading && tasks && tasks?.length < 1 && (
+          <h3 className="text-main font-bold text-xl text-center">
+            No task added yet!
+          </h3>
+        )}
       </div>
     </div>
   );
