@@ -8,9 +8,21 @@ export const GET = async (
   const { email } = params;
   const db = await connectDB();
   const tasklistCollection = db.collection("tasklist");
-  const result = await tasklistCollection
-    .find({ userEmail: email })
-    .toArray();
+  const url = new URL(request.url);
+  const search = url.searchParams.get("search") || "";
+  let query: { [key: string]: any } = {
+    userEmail: email, // Ensure the userEmail filter is included
+  };
+  if (search) {
+    query = {
+      ...query,
+      $or: [
+        { taskName: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ],
+    };
+  }
+  const result = await tasklistCollection.find(query).toArray();
   if (!result) {
     return NextResponse.json({ message: "No task found" });
   }

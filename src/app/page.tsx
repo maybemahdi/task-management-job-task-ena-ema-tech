@@ -1,12 +1,14 @@
 /* eslint-disable jsx-a11y/alt-text */
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import useTasks from "@/Hooks/useTasks";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import React, { FormEvent, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FaRegEdit, FaTrash } from "react-icons/fa";
+import { ImSpinner9 } from "react-icons/im";
+import { IoChevronDown } from "react-icons/io5";
 import { TiArrowSortedDown } from "react-icons/ti";
 import { SkewLoader } from "react-spinners";
 
@@ -23,7 +25,12 @@ export default function Home() {
   const [error, setError] = useState("");
   const [tags, setTags] = useState<string[]>([]); // State for managing tags
   const [inputTag, setInputTag] = useState<string>("");
-  const { tasks, isLoading, refetch } = useTasks();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  //filtering
+  const [statusFilter, setStatusFilter] = useState("");
+  const [priorityFilter, setPriorityFilter] = useState("");
+  const [submittedSearch, setSubmittedSearch] = useState("");
 
   useEffect(() => {
     document.title = "Task Manager | Home";
@@ -41,6 +48,11 @@ export default function Home() {
       return;
     }
 
+    if (tags?.length < 1) {
+      toast.error("Select a tag at least");
+      return;
+    }
+
     const form = e.target as HTMLFormElement;
     const taskName = form?.taskName?.value;
     const description = form?.description?.value;
@@ -54,19 +66,23 @@ export default function Home() {
       tags,
     };
     try {
+      setIsProcessing(true);
       const { data } = await axios.post("/api/tasks", {
         ...task,
         userName: session?.user?.name,
         userEmail: session?.user?.email,
       });
       if (data?.added) {
+        setIsProcessing(false);
         refetch();
         setError("");
         setTags([]);
         form.reset();
+        setDueDate("");
         toast.success("Task Added to do list");
       }
     } catch (error) {
+      setIsProcessing(false);
       console.log(error);
     }
   };
@@ -93,9 +109,31 @@ export default function Home() {
     }
   };
 
+  const handleSearch = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const searchInput = form?.search?.value;
+    setSubmittedSearch(searchInput);
+  };
+
+  const {
+    data: tasks,
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ["tasks", session?.user, submittedSearch],
+    enabled: !!session?.user,
+    queryFn: async () => {
+      const { data } = await axios.get(
+        `/api/tasks/${session?.user?.email}?search=${submittedSearch}`
+      );
+      return data;
+    },
+  });
+
   return (
     <div className="my-8 px-[10px] flex gap-8 justify-between flex-col md:flex-row w-full">
-      <div className="w-full flex flex-col items-center justify-center md:basis-1/2 shadow-md bg-white p-6 rounded-md">
+      <div className="w-full flex flex-col items-center justify-center md:basis-1/3 shadow-md bg-white p-6 rounded-md">
         <h3 className="text-main font-bold text-lg">Create a Task</h3>
         <form
           onSubmit={handleSubmit}
@@ -130,6 +168,7 @@ export default function Home() {
               id="description"
               name="description"
               placeholder="Enter task description"
+              required
             ></textarea>
           </div>
 
@@ -242,12 +281,16 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex justify-center items-center">
             <button
-              className="bg-blue-500 w-full hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-all duration-300"
+              className="flex justify-center items-center bg-blue-500 text-center w-full hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-all duration-300"
               type="submit"
             >
-              Create Task
+              {!isProcessing ? (
+                "Create Task"
+              ) : (
+                <ImSpinner9 className="animate-spin" size={20} />
+              )}
             </button>
           </div>
         </form>
@@ -256,12 +299,72 @@ export default function Home() {
         className={`w-full flex flex-col items-center
           ${tasks?.length < 1 && "justify-center"}
           ${isLoading && "justify-center"}
-          md:basis-1/2 shadow-md bg-white p-4 rounded-md`}
+          md:flex-1 shadow-md bg-white p-4 rounded-md`}
       >
         {isLoading && <SkewLoader color="#3B82F6" />}
         {!isLoading && tasks && tasks?.length > 0 && (
           <div className="mt-10 px-4 w-full">
             <h3 className="text-lg font-bold mb-4">Task List</h3>
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <form onSubmit={handleSearch} className="w-full relative">
+                  <input
+                    type="text"
+                    name="search"
+                    placeholder="Search..."
+                    className="border border-[#e5eaf2] py-2 pl-4 pr-[65px] outline-none w-full rounded-md"
+                  />
+
+                  <button
+                    type="submit"
+                    className="bg-gray-300 text-gray-500 absolute top-0 right-0 h-full px-5 flex items-center justify-center rounded-r-md cursor-pointer hover:bg-gray-400 hover:text-gray-200"
+                  >
+                    Search
+                  </button>
+                </form>
+              </div>
+              <div className="flex items-center justify-center gap-4">
+                <div className="relative">
+                  <select
+                    className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    <option disabled value="">
+                      Sort by Status
+                    </option>
+                    <option value="All">All</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Pending">Pending</option>
+                  </select>
+                </div>
+                <div className="relative">
+                  <select
+                    className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    value={priorityFilter}
+                    onChange={(e) => setPriorityFilter(e.target.value)}
+                  >
+                    <option disabled value="">
+                      Sort by Priority
+                    </option>
+                    <option value="All">All</option>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+                <button
+                  onClick={() => {
+                    setPriorityFilter("");
+                    setStatusFilter("");
+                    setSubmittedSearch("");
+                  }}
+                  className="bg-main p-2 rounded text-white hover:bg-blue-600 transition-all duration-300"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
             <div className="overflow-x-auto">
               <table className="min-w-full bg-white shadow-md rounded-lg">
                 <thead>
@@ -295,9 +398,9 @@ export default function Home() {
                       <td className="py-3 px-6 text-left">
                         <span
                           className={`py-1 px-3 rounded-full text-xs ${
-                            task.priority === "High"
+                            task.priority === "high"
                               ? "bg-red-200 text-red-700"
-                              : task.priority === "Medium"
+                              : task.priority === "medium"
                               ? "bg-yellow-200 text-yellow-700"
                               : "bg-green-200 text-green-700"
                           }`}
@@ -318,10 +421,18 @@ export default function Home() {
                         </div>
                       </td>
                       <td className="py-3 px-6 text-left">
-                        <FaRegEdit className="text-black cursor-pointer" size={20} />
+                        <FaRegEdit
+                          title="edit task"
+                          className="text-black cursor-pointer"
+                          size={20}
+                        />
                       </td>
                       <td className="py-3 px-6 text-left">
-                        <FaTrash className="text-rose-500 cursor-pointer" size={20} />
+                        <FaTrash
+                          title="delete task"
+                          className="text-rose-500 cursor-pointer"
+                          size={20}
+                        />
                       </td>
                     </tr>
                   ))}
