@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import React, { useState } from "react";
+import "../app/globals.css"
 
 // react icons
 import { CiMenuFries } from "react-icons/ci";

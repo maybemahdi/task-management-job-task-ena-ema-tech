@@ -1,4 +1,5 @@
 import React, { FormEvent, Fragment, useState } from "react";
+import "../app/globals.css";
 import {
   Dialog,
   DialogPanel,

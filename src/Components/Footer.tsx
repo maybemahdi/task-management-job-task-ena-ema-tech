@@ -2,6 +2,7 @@
 import React from "react";
 import { CgFacebook } from "react-icons/cg";
 import { BsInstagram, BsLinkedin, BsTwitter } from "react-icons/bs";
+import "../app/globals.css";
 
 const Footer = () => {
   return (
