@@ -14,7 +14,7 @@ const Error = () => {
         <p className="text-center">
           You might be in the wrong place! <br />
           <span className="text-main font-bold">
-            But Don't Worry, you can jump into our Home to enjoy plenty stuffs
+            But Dont Worry, you can jump into our Home to enjoy plenty stuffs
           </span>
         </p>
         <Link
