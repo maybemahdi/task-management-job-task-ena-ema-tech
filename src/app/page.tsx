@@ -166,31 +166,47 @@ export default function Home() {
   };
 
   const handleTaskDelete = async (id: string) => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        setIsUpdating(true);
-        const { data } = await axios.delete(`/api/tasks/delete/${id}`);
-        if (data?.deleted) {
-          setIsUpdating(false);
-          refetch();
-          Swal.fire({
-            title: "Deleted!",
-            text: "Your task has been deleted.",
-            icon: "success",
-          });
-        }
-      }
+    // First, soft delete the task by setting isDeleted to true
+    const softDeleteResponse = await axios.patch(`/api/tasks/softDelete/${id}`, {
+      isDeleted: true,
     });
-  };
 
+    if (softDeleteResponse.data?.updated) {
+      Swal.fire({
+        title: "Task Deleted!",
+        text: "Your task has been deleted. You can undo this action within 5 seconds.",
+        icon: "success",
+        showCancelButton: true,
+        confirmButtonText: "Undo",
+        cancelButtonText: "Dismiss",
+        timer: 5000,
+        timerProgressBar: true,
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          // User clicked "Undo" - restore the task by setting isDeleted to false
+          const undoResponse = await axios.patch(`/api/tasks/softDelete/${id}`, {
+            isDeleted: false,
+          });
+          if (undoResponse.data?.updated) {
+            Swal.fire("Undo!", "Your task has been restored.", "success");
+            refetch(); // Refresh the task list
+          }
+        } else {
+          // After 5 seconds, if no undo, delete task permanently
+          const deleteResponse = await axios.delete(`/api/tasks/delete/${id}`);
+          if (deleteResponse.data?.deleted) {
+            Swal.fire(
+              "Deleted!",
+              "Your task has been permanently deleted.",
+              "success"
+            );
+            refetch(); // Refresh the task list
+          }
+        }
+      });
+    }
+  };
+   
   return (
     <div className="my-8 px-[10px] flex gap-5 justify-between flex-col md:flex-row w-full">
       <div className="w-full flex flex-col items-center justify-center md:basis-[30%] shadow-md bg-white p-6 rounded-md">
@@ -462,7 +478,7 @@ export default function Home() {
                             : "No due date"}
                         </span>
                         {task?.reminder && (
-                          <p className="absolute text-red-700 bottom-3 text-[10px]">
+                          <p className="absolute font-bold text-red-600 bottom-3 text-[10px]">
                             Due date is near
                           </p>
                         )}
