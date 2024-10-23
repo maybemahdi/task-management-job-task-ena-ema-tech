@@ -17,11 +17,10 @@ export const POST = async (request: Request) => {
 
     const isExist = await userCollection.findOne({
       email: newUser.email,
-      provider: "credential",
     });
 
     if (isExist) {
-      return NextResponse.json({ message: "User Exists" }, { status: 409 });
+      return NextResponse.json({ message: "User Exists", created: false });
     }
 
     await userCollection.insertOne(newUser);

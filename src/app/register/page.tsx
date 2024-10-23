@@ -78,6 +78,9 @@ const Page: React.FC = () => {
           form.reset();
           router.push("/");
         }
+      }else{
+        setIsLoading(false);
+        toast.error(data?.message)
       }
     } catch (error: unknown) {
       setIsLoading(false);

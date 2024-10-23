@@ -2,6 +2,7 @@
 /* eslint-disable jsx-a11y/alt-text */
 /* eslint-disable @next/next/no-img-element */
 "use client";
+import EditTaskModal from "@/Components/EditTaskModal";
 import ToggleButton from "@/Components/ToggleButton";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
@@ -18,6 +19,7 @@ import Swal from "sweetalert2";
 interface Task {
   _id: string;
   taskName: string;
+  description: string;
   priority: string;
   tags: string[];
   dueDate: Date;
@@ -33,6 +35,9 @@ export default function Home() {
   const [inputTag, setInputTag] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // edit modal
+  const [isOpen, setIsOpen] = useState(false);
 
   //filtering
   const [statusFilter, setStatusFilter] = useState("");
@@ -167,9 +172,12 @@ export default function Home() {
 
   const handleTaskDelete = async (id: string) => {
     // First, soft delete the task by setting isDeleted to true
-    const softDeleteResponse = await axios.patch(`/api/tasks/softDelete/${id}`, {
-      isDeleted: true,
-    });
+    const softDeleteResponse = await axios.patch(
+      `/api/tasks/softDelete/${id}`,
+      {
+        isDeleted: true,
+      }
+    );
 
     if (softDeleteResponse.data?.updated) {
       Swal.fire({
@@ -184,9 +192,12 @@ export default function Home() {
       }).then(async (result) => {
         if (result.isConfirmed) {
           // User clicked "Undo" - restore the task by setting isDeleted to false
-          const undoResponse = await axios.patch(`/api/tasks/softDelete/${id}`, {
-            isDeleted: false,
-          });
+          const undoResponse = await axios.patch(
+            `/api/tasks/softDelete/${id}`,
+            {
+              isDeleted: false,
+            }
+          );
           if (undoResponse.data?.updated) {
             Swal.fire("Undo!", "Your task has been restored.", "success");
             refetch(); // Refresh the task list
@@ -206,10 +217,10 @@ export default function Home() {
       });
     }
   };
-   
+
   return (
     <div className="my-8 px-[10px] flex gap-5 justify-between flex-col md:flex-row w-full">
-      <div className="w-full flex flex-col items-center justify-center md:basis-[30%] shadow-md bg-white p-6 rounded-md">
+      <div className="w-full flex flex-col items-center justify-center md:basis-1/3 shadow-md bg-white p-6 rounded-md">
         <h3 className="text-main font-bold text-lg">Create a Task</h3>
         <form
           onSubmit={handleSubmit}
@@ -374,11 +385,11 @@ export default function Home() {
       <div
         className={`w-full flex flex-col items-center
           ${isLoading && "justify-center"}
-          md:flex-1 shadow-md bg-white p-4 rounded-md overflow-x-auto`}
+          md:flex-1 shadow-md bg-white p-6 rounded-md overflow-x-auto`}
       >
         {isLoading || (isUpdating && <SkewLoader color="#3B82F6" />)}
         {!isLoading && tasks && (
-          <div className="mt-10 px-4 w-full">
+          <div className="mt-10 w-full">
             <h3 className="text-lg font-bold mb-4">Task List</h3>
             <div className="flex flex-col gap-3 justify-start md:flex-row md:justify-between md:*:items-center mb-4">
               <div>
@@ -523,6 +534,7 @@ export default function Home() {
                       </td>
                       <td className="py-3 px-6 text-left">
                         <FaRegEdit
+                          onClick={() => setIsOpen(true)}
                           title="edit task"
                           className="text-black cursor-pointer"
                           size={20}
@@ -557,6 +569,14 @@ export default function Home() {
                       <td className="py-3 px-6 text-left">
                         <ToggleButton task={task} refetch={refetch} />
                       </td>
+                      {isOpen && (
+                        <EditTaskModal
+                          task={task}
+                          refetch={refetch}
+                          isOpen={isOpen}
+                          setIsOpen={setIsOpen}
+                        />
+                      )}
                     </tr>
                   ))}
                 </tbody>
