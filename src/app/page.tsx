@@ -485,9 +485,10 @@ export default function Home() {
                         >
                           <IoIosCheckmarkCircle
                             title="Mark as Completed"
-                            className={`text-green-500 cursor-pointer ${
-                              task?.status === "Completed" &&
-                              "cursor-not-allowed text-gray-300"
+                            className={`${
+                              task?.status === "Completed"
+                                ? "cursor-not-allowed text-gray-300"
+                                : "text-green-500 cursor-pointer"
                             }`}
                             size={20}
                           />

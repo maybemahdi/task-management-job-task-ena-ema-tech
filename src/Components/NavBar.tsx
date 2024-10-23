@@ -6,6 +6,7 @@ import { CiMenuFries } from "react-icons/ci";
 import useRouting from "@/Hooks/useRouting";
 import { signOut, useSession } from "next-auth/react";
 import toast from "react-hot-toast";
+import { RxCross2 } from "react-icons/rx";
 
 const NavBar = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -41,17 +42,24 @@ const NavBar = () => {
           </button>
         )}
 
-        <CiMenuFries
-          className="text-[1.8rem] mr-1 text-[#424242]c cursor-pointer lg:hidden flex"
-          onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-        />
+        {!mobileSidebarOpen ? (
+          <CiMenuFries
+            className="text-[1.8rem] mr-1 text-[#424242]c cursor-pointer lg:hidden flex"
+            onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+          />
+        ) : (
+          <RxCross2
+            className="text-[1.8rem] mr-1 text-[#424242]c cursor-pointer lg:hidden flex"
+            onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+          />
+        )}
       </div>
 
       <aside
         className={` ${
           mobileSidebarOpen
             ? "translate-x-0 opacity-100 z-20"
-            : "translate-x-[200px] opacity-0 z-[-1]"
+            : "translate-x-[-200px] opacity-0 z-[-1]"
         } lg:hidden bg-white boxShadow p-4 text-center absolute top-[65px] right-0 w-full rounded-md transition-all duration-300`}
       >
         <div className="items-center gap-[10px] flex flex-col">
