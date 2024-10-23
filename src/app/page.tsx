@@ -2,6 +2,7 @@
 /* eslint-disable jsx-a11y/alt-text */
 /* eslint-disable @next/next/no-img-element */
 "use client";
+import "./globals.css";
 import EditTaskModal from "@/Components/EditTaskModal";
 import ToggleButton from "@/Components/ToggleButton";
 import { useQuery } from "@tanstack/react-query";
