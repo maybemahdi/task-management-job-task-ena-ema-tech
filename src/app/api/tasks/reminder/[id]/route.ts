@@ -16,13 +16,13 @@ export const PATCH = async (
   }
   const updateDoc = {
     $set: {
-      status: "Completed",
+      reminder: !task?.reminder,
     },
   };
   const result = await tasklistCollection.updateOne(filter, updateDoc);
-  if (result.modifiedCount === 0) {
-    return NextResponse.json({ message: "Not Updated", updated: false });
-  }
+   if (result.modifiedCount === 0) {
+     return NextResponse.json({ message: "Not Updated", updated: false });
+   }
 
   return NextResponse.json({ message: "Updated", updated: true });
 };

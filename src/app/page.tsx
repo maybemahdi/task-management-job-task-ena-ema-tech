@@ -2,6 +2,7 @@
 /* eslint-disable jsx-a11y/alt-text */
 /* eslint-disable @next/next/no-img-element */
 "use client";
+import ToggleButton from "@/Components/ToggleButton";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useSession } from "next-auth/react";
@@ -12,6 +13,7 @@ import { ImSpinner9 } from "react-icons/im";
 import { IoIosCheckmarkCircle } from "react-icons/io";
 import { TiArrowSortedDown } from "react-icons/ti";
 import { SkewLoader } from "react-spinners";
+import Swal from "sweetalert2";
 
 interface Task {
   _id: string;
@@ -20,6 +22,7 @@ interface Task {
   tags: string[];
   dueDate: Date;
   status: string;
+  reminder: boolean;
 }
 
 export default function Home() {
@@ -69,6 +72,7 @@ export default function Home() {
       priority,
       tags,
       status: "Pending",
+      reminder: false,
     };
     try {
       setIsProcessing(true);
@@ -159,6 +163,32 @@ export default function Home() {
       console.log(error);
       toast.error(error?.message);
     }
+  };
+
+  const handleTaskDelete = async (id: string) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        setIsUpdating(true);
+        const { data } = await axios.delete(`/api/tasks/delete/${id}`);
+        if (data?.deleted) {
+          setIsUpdating(false);
+          refetch();
+          Swal.fire({
+            title: "Deleted!",
+            text: "Your task has been deleted.",
+            icon: "success",
+          });
+        }
+      }
+    });
   };
 
   return (
@@ -406,25 +436,36 @@ export default function Home() {
                     <th className="py-3 px-6 text-left">Edit</th>
                     <th className="py-3 px-6 text-left">Delete</th>
                     <th className="py-3 px-6 text-left">Mark</th>
+                    <th className="py-3 px-6 text-left">Reminder</th>
                   </tr>
                 </thead>
                 <tbody className="text-gray-600 text-sm font-light">
                   {tasks?.map((task: Task, index: number) => (
                     <tr
                       key={index}
-                      className="border-b border-gray-200 hover:bg-gray-100"
+                      className={`border-b border-gray-200 hover:bg-gray-100`}
                     >
                       <td className="py-3 px-6 text-left whitespace-nowrap">
                         <span className="font-medium">{task.taskName}</span>
                       </td>
-                      <td className="py-3 px-6 text-left">
-                        {task.dueDate
-                          ? new Date(task.dueDate).toLocaleDateString("en-GB", {
-                              year: "numeric",
-                              month: "2-digit",
-                              day: "2-digit",
-                            })
-                          : "No due date"}
+                      <td className="py-3 px-6 text-left relative">
+                        <span>
+                          {task.dueDate
+                            ? new Date(task.dueDate).toLocaleDateString(
+                                "en-GB",
+                                {
+                                  year: "numeric",
+                                  month: "2-digit",
+                                  day: "2-digit",
+                                }
+                              )
+                            : "No due date"}
+                        </span>
+                        {task?.reminder && (
+                          <p className="absolute text-red-700 bottom-3 text-[10px]">
+                            Due date is near
+                          </p>
+                        )}
                       </td>
                       <td className="py-3 px-6 text-left">
                         <span
@@ -473,6 +514,9 @@ export default function Home() {
                       </td>
                       <td className="py-3 px-6 text-left">
                         <FaTrash
+                          onClick={() => {
+                            handleTaskDelete(task?._id);
+                          }}
                           title="delete task"
                           className="text-rose-500 cursor-pointer"
                           size={20}
@@ -493,6 +537,9 @@ export default function Home() {
                             size={20}
                           />
                         </button>
+                      </td>
+                      <td className="py-3 px-6 text-left">
+                        <ToggleButton task={task} refetch={refetch} />
                       </td>
                     </tr>
                   ))}
