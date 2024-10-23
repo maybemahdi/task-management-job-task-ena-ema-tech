@@ -97,9 +97,6 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({
     }
   };
 
-  const date = new Date("2024-10-23T10:14:12.495Z").toLocaleDateString()
-  console.log(date)
-
   // Add tag from input
   const addTag = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -126,7 +123,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({
       <Transition appear show={isOpen} as={Fragment}>
         <Dialog
           as="div"
-          className="relative w-full z-[1000]"
+          className="relative w-full z-[9999]"
           onClose={() => {
             setIsOpen(false);
           }}
