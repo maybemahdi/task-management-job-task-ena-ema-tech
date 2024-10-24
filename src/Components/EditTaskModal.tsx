@@ -124,7 +124,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({
       <Transition appear show={isOpen} as={Fragment}>
         <Dialog
           as="div"
-          className="relative w-full z-[9999]"
+          className="relative w-full z-[1000]"
           onClose={() => {
             setIsOpen(false);
           }}
