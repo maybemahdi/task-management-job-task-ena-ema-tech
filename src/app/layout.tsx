@@ -4,8 +4,8 @@ import "./globals.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AuthProvider from "@/Providers/AuthProvider";
 import { Toaster } from "react-hot-toast";
-import NavBar from "@/Components/NavBar";
-import Footer from "@/Components/Footer";
+import NavBar from "@/components/NavBar";
+import Footer from "@/components/Footer";
 
 const poppins = Poppins({
   subsets: ["latin"],

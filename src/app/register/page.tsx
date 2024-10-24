@@ -1,5 +1,5 @@
 "use client";
-import Loading from "@/Components/Loading";
+import Loading from "@/components/Loading";
 import axios from "axios";
 import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";

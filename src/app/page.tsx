@@ -3,8 +3,8 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import "./globals.css";
-import EditTaskModal from "@/Components/EditTaskModal";
-import ToggleButton from "@/Components/ToggleButton";
+import EditTaskModal from "@/components/EditTaskModal";
+import ToggleButton from "@/components/ToggleButton";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useSession } from "next-auth/react";

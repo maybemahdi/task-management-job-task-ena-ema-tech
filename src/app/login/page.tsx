@@ -1,5 +1,5 @@
 "use client";
-import Loading from "@/Components/Loading";
+import Loading from "@/components/Loading";
 import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
